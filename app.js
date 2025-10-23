@@ -11,8 +11,6 @@ let currentClef = clefSelect.value || 'treble';
 
 /* Datos musicales */
 const NOTE_BASE = { 'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11 };
-const MIN_MIDI = 36;
-const MAX_MIDI = 83;
 
 function noteNameToMidi(name){
   const m = name.match(/^([A-G]#?)(\d)$/);
@@ -20,6 +18,7 @@ function noteNameToMidi(name){
   const pitch = m[1], octave = parseInt(m[2],10);
   return (octave+1)*12 + NOTE_BASE[pitch];
 }
+
 function midiToNoteName(midi){
   const octave = Math.floor(midi/12)-1;
   const ordered = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -41,13 +40,19 @@ const staffLines = 5;
 
 /* Posiciones exactas (solo notas comunes) */
 const NOTE_POS = {
-  treble: {'C4':5,'C#4':5,'D4':4.5,'D#4':4.5,'E4':4,'F4':3.5,'F#4':3.5,'G4':3,'G#4':3,'A4':2.5,'A#4':2.5,'B4':2,'C5':1.5,'C#5':1.5,'D5':1,'D#5':1,'E5':0.5,'F5':0,'F#5':0},
-  bass: {'E2':5,'F2':4.5,'F#2':4.5,'G2':4,'G#2':4,'A2':3.5,'A#2':3.5,'B2':3,'C3':2.5,'C#3':2.5,'D3':2,'D#3':2,'E3':1.5,'F3':1,'F#3':1,'G3':0.5,'A3':0,'A#3':0}
+  treble: {'C4':5,'C#4':5,'D4':4.5,'D#4':4.5,'E4':4,'F4':3.5,'F#4':3.5,'G4':3,'G#4':3,'A4':2.5,'A#4':2.5,'B4':2,'C5':1.5,'C#5':1.5,'D5':1,'D#5':1,'E5':0.5,'F5':0,'F#5':0,'G5':-0.5,'G#5':-0.5,'A5':-1,'A#5':-1,'B5':-1.5,'C6':-2,'C#6':-2,'D6':-2},
+  bass: {'E2':5,'F2':4.5,'F#2':4.5,'G2':4,'G#2':4,'A2':3.5,'A#2':3.5,'B2':3,'C3':2.5,'C#3':2.5,'D3':2,'D#3':2,'E3':1.5,'F3':1,'F#3':1,'G3':0.5,'G#3':0.5,'A3':0,'A#3':0,'B3':-0.5,'C4':-1}
 };
 
 /* Audio: dos sonidos fijos */
 let audioCtx=null;
-function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
+function ensureAudio(){ 
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); 
+}
+/* Activar audio en móviles con primer toque */
+document.body.addEventListener('touchstart',()=>ensureAudio(),{once:true});
+document.body.addEventListener('click',()=>ensureAudio(),{once:true});
+
 function playSound(correct=true){
   ensureAudio();
   const o=audioCtx.createOscillator();
@@ -64,6 +69,7 @@ function playSound(correct=true){
 
 /* Dibujar pentagrama */
 function clearCanvas(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+
 function drawStaff(clef=currentClef){
   clearCanvas();
   ctx.strokeStyle='#111'; ctx.lineWidth=1.2;
@@ -138,10 +144,19 @@ function handleAnswer(chosen,button){
   }
 }
 
-/* Generación nota aleatoria */
+/* Generación nota aleatoria con límites */
 function randomMidiInRange(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
 function generateRandomForClef(clef){ 
-  return clef==='treble'?randomMidiInRange(noteNameToMidi('C4'),noteNameToMidi('A5')):randomMidiInRange(noteNameToMidi('E2'),noteNameToMidi('C4'));
+  if(clef==='treble'){
+    const min=noteNameToMidi('F3'); // 2 líneas abajo
+    const max=noteNameToMidi('D6'); // 2 líneas arriba
+    return randomMidiInRange(min,max);
+  } else {
+    const min=noteNameToMidi('G1');
+    const max=noteNameToMidi('C4');
+    return randomMidiInRange(min,max);
+  }
 }
 
 /* Eventos UI */
