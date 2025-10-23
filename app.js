@@ -12,14 +12,12 @@ let currentClef = clefSelect.value || 'treble';
 
 /* -------------------- Datos musicales -------------------- */
 const NOTE_BASE = { 'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11 };
-
 function noteNameToMidi(name){
   const m = name.match(/^([A-G]#?)(\d)$/);
   if(!m) return null;
   const pitch = m[1], octave = parseInt(m[2],10);
   return (octave+1)*12 + NOTE_BASE[pitch];
 }
-
 function midiToNoteName(midi){
   const octave = Math.floor(midi/12)-1;
   const ordered = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -40,6 +38,13 @@ let lineGap = 18;
 const staffLines = 5;
 const VISIBLE_MARGIN = 20; // margen superior/inferior en px
 
+// Calcular staffTop centrado verticalmente
+function computeStaffTop() {
+  const staffHeight = (staffLines - 1) * lineGap;
+  const totalHeight = staffHeight + 2*lineGap*2; // 2 líneas ledger arriba y abajo
+  staffTop = (canvas.height - totalHeight)/2 + 2*lineGap; 
+}
+
 /* Posiciones predefinidas para pentagrama */
 const NOTE_POS = {
   treble: {'F3':7,'F#3':7,'G3':6.5,'G#3':6.5,'A3':6,'A#3':6,'B3':5.5,'C4':5,'C#4':5,'D4':4.5,'D#4':4.5,'E4':4,'F4':3.5,'F#4':3.5,'G4':3,'G#4':3,'A4':2.5,'A#4':2.5,'B4':2,'C5':1.5,'C#5':1.5,'D5':1,'D#5':1,'E5':0.5,'F5':0,'F#5':0,'G5':-0.5,'G#5':-0.5,'A5':-1,'A#5':-1,'B5':-1.5,'C6':-2,'C#6':-2,'D6':-2},
@@ -51,7 +56,6 @@ let audioCtx=null;
 function ensureAudio(){ 
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); 
 }
-/* Primer toque para móviles */
 document.body.addEventListener('touchstart',()=>ensureAudio(),{once:true});
 document.body.addEventListener('click',()=>ensureAudio(),{once:true});
 
@@ -73,6 +77,7 @@ function playSound(correct=true){
 function clearCanvas(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); }
 
 function drawStaff(clef=currentClef){
+  computeStaffTop();
   clearCanvas();
   ctx.strokeStyle='#111'; ctx.lineWidth=1.2;
   const startX=60, endX=canvas.width-40;
@@ -85,7 +90,6 @@ function drawStaff(clef=currentClef){
   else ctx.fillText('𝄢', startX-18, staffTop +2*lineGap +12);
 }
 
-/* Posición vertical limitada dentro del canvas */
 function midiToY(midi, clef=currentClef){
   const name = midiToNoteName(midi);
   let pos = NOTE_POS[clef][name];
