@@ -50,18 +50,56 @@ const NOTE_POS = {
 /* Audio: dos sonidos fijos */
 let audioCtx=null;
 function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
+
+/* Intento de reanudar el AudioContext en la primera interacción explícita del usuario
+   para sortear políticas de autoplay en algunos navegadores. */
+function resumeAudioOnFirstInteraction(){
+  ensureAudio();
+  if(!audioCtx) return;
+  const resume = ()=> {
+    if(audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(()=>{ /* ignore */ });
+    }
+  };
+  // reanudar en el primer clic o toque; se ejecuta solo una vez
+  document.addEventListener('click', resume, { once: true, passive: true });
+  document.addEventListener('touchstart', resume, { once: true, passive: true });
+}
+resumeAudioOnFirstInteraction();
+
+/* Reproducir sonido (asegurando resume() si el contexto está suspendido) */
 function playSound(correct=true){
   ensureAudio();
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  o.type='sine';
-  o.frequency.value=correct?880:220; // agudo para correcto, grave para error
-  o.connect(g); g.connect(audioCtx.destination);
-  const now=audioCtx.currentTime;
-  g.gain.setValueAtTime(0.0001,now);
-  g.gain.exponentialRampToValueAtTime(0.15, now+0.02);
-  o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.5);
-  o.stop(now+0.55);
+
+  const doPlay = ()=>{
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type='sine';
+    o.frequency.value=correct?880:220; // agudo para correcto, grave para error
+    o.connect(g); g.connect(audioCtx.destination);
+    const now=audioCtx.currentTime;
+    // usar valores > 0 para exponentialRamp
+    g.gain.setValueAtTime(0.0001,now);
+    g.gain.exponentialRampToValueAtTime(0.15, now+0.02);
+    o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.5);
+    o.stop(now+0.55);
+  };
+
+  if(!audioCtx) {
+    // si por alguna razón no se pudo crear, no hacer nada
+    return;
+  }
+
+  if(audioCtx.state === 'suspended'){
+    // reanudar antes de reproducir (los navegadores requieren interacción del usuario)
+    audioCtx.resume().then(doPlay).catch(err=>{
+      console.warn('No se pudo reanudar AudioContext:', err);
+      // intentar reproducir de todas formas
+      try{ doPlay(); }catch(e){ /* no más remedio */ }
+    });
+  } else {
+    doPlay();
+  }
 }
 
 /* Dibujar pentagrama */
@@ -138,19 +176,4 @@ function handleAnswer(chosen){
 
 /* Generación nota aleatoria */
 function randomMidiInRange(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function generateRandomForClef(clef){ 
-  return clef==='treble'?randomMidiInRange(noteNameToMidi('C4'),noteNameToMidi('A5')):randomMidiInRange(noteNameToMidi('E2'),noteNameToMidi('C4'));
-}
-
-/* Eventos UI */
-function newNote(){ currentMidi=generateRandomForClef(currentClef); drawNoteAt(currentMidi); feedbackEl.textContent=''; }
-function playCurrent(){ if(currentMidi===null) return; playSound(true); }
-
-clefSelect.addEventListener('change',e=>{ currentClef=e.target.value; if(currentMidi!==null) drawNoteAt(currentMidi); else drawStaff(currentClef); });
-newBtn.addEventListener('click',newNote);
-playBtn.addEventListener('click',playCurrent);
-
-/* Inicialización */
-buildOptions();
-drawStaff(currentClef);
-newNote();
+function generate
