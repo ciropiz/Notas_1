@@ -45,3 +45,6 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;background:#fff;bo
 }
 .pop{animation: pop 0.3s ease;}
 .shake{animation: shake 0.3s ease;}
+
+/* Añadido: ocultar el botón Reproducir por si queda en el HTML */
+#playBtn { display: none !important; }
