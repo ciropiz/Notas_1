@@ -5,7 +5,7 @@ const feedbackEl = document.getElementById('feedback');
 const optionsWrap = document.getElementById('options');
 const clefSelect = document.getElementById('clef');
 const newBtn = document.getElementById('newBtn');
-const playBtn = document.getElementById('playBtn');
+// const playBtn = document.getElementById('playBtn'); // eliminado porque ya no existe en HTML
 
 let currentMidi = null;
 let currentClef = clefSelect.value || 'treble';
@@ -47,8 +47,8 @@ function computeStaffTop() {
 
 /* Posiciones predefinidas para pentagrama */
 const NOTE_POS = {
-  treble: {'F3':7,'F#3':7,'G3':6.5,'G#3':6.5,'A3':6,'A#3':6,'B3':5.5,'C4':5,'C#4':5,'D4':4.5,'D#4':4.5,'E4':4,'F4':3.5,'F#4':3.5,'G4':3,'G#4':3,'A4':2.5,'A#4':2.5,'B4':2,'C5':1.5,'C#5':1.5,'D5':1,'D#5':1,'E5':0.5,'F5':0,'F#5':0,'G5':-0.5,'G#5':-0.5,'A5':-1,'A#5':-1,'B5':-1.5,'C6':-2,'C#6':-2,'D6':-2},
-  bass: {'G1':7,'G#1':7,'A1':6.5,'A#1':6.5,'B1':6,'C2':5.5,'C#2':5.5,'D2':5,'D#2':5,'E2':4,'F2':3.5,'F#2':3.5,'G2':3,'G#2':3,'A2':2.5,'A#2':2.5,'B2':2,'C3':1.5,'C#3':1.5,'D3':1,'D#3':1,'E3':0.5,'F3':0,'F#3':0,'G3':-0.5,'G#3':-0.5,'A3':-1,'A#3':-1,'B3':-1.5,'C4':-2}
+  treble: {'F3':7,'F#3':7,'G3':6.5,'G#3':6.5,'A3':6,'A#3':6,'B3':5.5,'C4':5,'C#4':5,'D4':4.5,'D#4':4.5,'E4':4,'F4':3.5,'F#4':3.5,'G4':3,'G#4':3,'A4':2.5,'A#4':2.5,'B4':2,'C5':1.5,'C#5':1.5,'D5':1,[...]
+  bass: {'G1':7,'G#1':7,'A1':6.5,'A#1':6.5,'B1':6,'C2':5.5,'C#2':5.5,'D2':5,'D#2':5,'E2':4,'F2':3.5,'F#2':3.5,'G2':3,'G#2':3,'A2':2.5,'A#2':2.5,'B2':2,'C3':1.5,'C#3':1.5,'D3':1,'D#3':1,'E3':0.5,'F[...]
 };
 
 /* -------------------- Audio -------------------- */
@@ -175,7 +175,7 @@ function playCurrent(){ if(currentMidi===null) return; playSound(true); }
 
 clefSelect.addEventListener('change',e=>{ currentClef=e.target.value; if(currentMidi!==null) drawNoteAt(currentMidi); else drawStaff(currentClef); });
 newBtn.addEventListener('click',newNote);
-playBtn.addEventListener('click',playCurrent);
+// playBtn.addEventListener('click',playCurrent); // eliminado: ya no existe el botón
 
 /* -------------------- Inicialización -------------------- */
 buildOptions();
